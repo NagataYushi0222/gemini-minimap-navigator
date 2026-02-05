@@ -1,0 +1,231 @@
+/* Gemini Navigator - Customizable Theme */
+
+/* ミニマップコンテナ */
+#gemini-minimap {
+  position: fixed;
+  top: 80px;
+  right: 12px;
+  width: 70px;
+  height: calc(100vh - 160px);
+  background: rgba(32, 33, 36, 0.85);
+  border-radius: 10px;
+  z-index: 9999;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+  opacity: 0.6;
+  transition: opacity 0.25s ease, width 0.2s ease, background 0.2s ease;
+}
+
+#gemini-minimap:hover {
+  opacity: 1 !important;
+}
+
+/* 設定ボタン */
+#gemini-minimap-settings-btn {
+  padding: 6px;
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: color 0.15s;
+  user-select: none;
+}
+
+#gemini-minimap-settings-btn:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* コンテンツエリア */
+#gemini-minimap-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 6px;
+  position: relative;
+}
+
+#gemini-minimap-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* メッセージブロック */
+.minimap-block {
+  border-radius: 4px;
+  cursor: pointer;
+  transition: filter 0.15s ease, box-shadow 0.15s ease;
+  background-size: cover;
+  background-position: center;
+}
+
+.minimap-block:hover {
+  filter: brightness(1.2);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+.minimap-block.user {
+  opacity: 0.7;
+}
+
+.minimap-block.gemini {
+  opacity: 0.6;
+}
+
+/* ビューポートハイライト */
+#gemini-minimap-viewport {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  background: rgba(138, 180, 248, 0.08);
+  border: 1px solid rgba(138, 180, 248, 0.4);
+  border-radius: 4px;
+  pointer-events: none;
+  transition: top 0.1s ease-out, height 0.1s ease-out;
+}
+
+/* ツールチップ */
+.minimap-tooltip {
+  position: fixed;
+  right: 90px;
+  background: rgba(41, 42, 45, 0.95);
+  color: rgba(232, 234, 237, 0.9);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  max-width: 300px;
+  line-height: 1.5;
+  z-index: 10001;
+  pointer-events: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  word-break: break-word;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* 設定パネル */
+#gemini-minimap-panel {
+  position: fixed;
+  top: 80px;
+  right: 100px;
+  width: 280px;
+  border-radius: 12px;
+  z-index: 10002;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+}
+
+#gemini-minimap-panel.dark {
+  background: rgba(32, 33, 36, 0.98);
+  color: #e8eaed;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#gemini-minimap-panel.light {
+  background: rgba(255, 255, 255, 0.98);
+  color: #202124;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.minimap-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  font-weight: 500;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.minimap-panel-close {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 16px;
+  transition: opacity 0.15s;
+}
+
+.minimap-panel-close:hover {
+  opacity: 1;
+}
+
+.minimap-panel-content {
+  padding: 16px;
+}
+
+.minimap-setting-group {
+  margin-bottom: 16px;
+}
+
+.minimap-setting-group label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 6px;
+  opacity: 0.8;
+}
+
+.minimap-setting-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.minimap-setting-group input[type="range"] {
+  width: 100%;
+  cursor: pointer;
+}
+
+.minimap-setting-group input[type="color"] {
+  width: 100%;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  background: transparent;
+}
+
+.minimap-setting-group input[type="text"] {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  background: rgba(128, 128, 128, 0.1);
+  color: inherit;
+  font-size: 11px;
+}
+
+.minimap-setting-group input[type="text"]::placeholder {
+  opacity: 0.5;
+}
+
+#minimap-reset-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(138, 180, 248, 0.2);
+  color: #8ab4f8;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+#minimap-reset-btn:hover {
+  background: rgba(138, 180, 248, 0.35);
+}
+
+/* ライトモード用の調整 */
+#gemini-minimap-panel.light #minimap-reset-btn {
+  background: rgba(26, 115, 232, 0.1);
+  color: #1a73e8;
+}
+
+#gemini-minimap-panel.light #minimap-reset-btn:hover {
+  background: rgba(26, 115, 232, 0.2);
+}
+
+#gemini-minimap-panel.light .minimap-setting-group input[type="text"] {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.15);
+}
