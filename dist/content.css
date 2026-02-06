@@ -92,16 +92,17 @@
     pointer-events: none;
 }
 
-/* ビューポートハイライト */
+/* ビューポートハイライト - 現在表示中の部分 */
 #gemini-minimap-viewport {
     position: absolute;
-    left: 3px;
-    right: 3px;
-    background: rgba(138, 180, 248, 0.1);
-    border: 1px solid rgba(138, 180, 248, 0.5);
+    left: 0;
+    right: 0;
+    background: rgba(255, 230, 0, 0.35);
+    border: 2px solid rgba(255, 200, 0, 0.8);
     border-radius: 4px;
     pointer-events: none;
     transition: top 0.1s ease-out, height 0.1s ease-out;
+    box-shadow: 0 0 8px rgba(255, 200, 0, 0.4);
 }
 
 /* ツールチップ */

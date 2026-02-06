@@ -69,10 +69,26 @@
     }
 
     function findScrollContainer() {
-        const selectors = ['main', '[role="main"]'];
+        // Try various selectors for Gemini's scroll container
+        const selectors = [
+            'main',
+            '[role="main"]',
+            '.conversation-container',
+            '[class*="conversation"]',
+            '[class*="chat-container"]'
+        ];
         for (const selector of selectors) {
             const el = document.querySelector(selector);
             if (el && el.scrollHeight > el.clientHeight) {
+                console.log('[Gemini Navigator] Found scroll container:', selector);
+                return el;
+            }
+        }
+        // Fallback: find any scrollable element
+        const allElements = document.querySelectorAll('div');
+        for (const el of allElements) {
+            if (el.scrollHeight > el.clientHeight + 100 && el.clientHeight > 200) {
+                console.log('[Gemini Navigator] Found scrollable div');
                 return el;
             }
         }
@@ -108,9 +124,26 @@
         minimapContent.addEventListener('mouseover', handleBlockHover, false);
         minimapContent.addEventListener('mouseout', handleBlockLeave, false);
 
-        const scrollTarget = scrollContainer === document.documentElement ? window : scrollContainer;
-        scrollTarget.addEventListener('scroll', debounce(updateViewport, 30));
+        // Listen to all possible scroll sources for real-time viewport updates
+        const scrollUpdate = () => requestAnimationFrame(updateViewport);
+
+        // Window scroll
+        window.addEventListener('scroll', scrollUpdate, { passive: true, capture: true });
+
+        // Scroll container scroll
+        if (scrollContainer && scrollContainer !== document.documentElement) {
+            scrollContainer.addEventListener('scroll', scrollUpdate, { passive: true });
+        }
+
+        // Find and listen to all scrollable elements (Gemini uses nested scroll containers)
+        document.querySelectorAll('main, [role="main"], div').forEach(el => {
+            if (el.scrollHeight > el.clientHeight + 50) {
+                el.addEventListener('scroll', scrollUpdate, { passive: true });
+            }
+        });
+
         window.addEventListener('resize', debounce(updateViewport, 100));
+
 
         applySettings();
     }
@@ -438,22 +471,43 @@
     }
 
     function updateViewport() {
-        if (!viewportIndicator || !minimapContent || !scrollContainer) return;
+        if (!viewportIndicator || !minimapContent) return;
 
-        const scrollTop = scrollContainer === document.documentElement
-            ? window.scrollY
-            : scrollContainer.scrollTop;
-        const viewportHeight = window.innerHeight;
-        const scrollHeight = scrollContainer.scrollHeight;
+        const blocks = minimapContent.querySelectorAll('.minimap-block');
+        if (blocks.length === 0) return;
 
-        const minimapHeight = minimapContent.clientHeight;
+        // Find first and last visible message in viewport
+        let firstVisibleIdx = -1;
+        let lastVisibleIdx = -1;
 
-        const ratio = minimapHeight / scrollHeight;
-        const indicatorTop = scrollTop * ratio;
-        const indicatorHeight = Math.max(30, viewportHeight * ratio);
+        cachedMessages.forEach((msg, idx) => {
+            if (msg.element) {
+                const rect = msg.element.getBoundingClientRect();
+                const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+                if (isVisible) {
+                    if (firstVisibleIdx === -1) firstVisibleIdx = idx;
+                    lastVisibleIdx = idx;
+                }
+            }
+        });
 
-        viewportIndicator.style.top = `${indicatorTop}px`;
-        viewportIndicator.style.height = `${indicatorHeight}px`;
+        if (firstVisibleIdx === -1) {
+            viewportIndicator.style.display = 'none';
+            return;
+        }
+
+        // Map visible message range to minimap block positions
+        const firstBlock = blocks[firstVisibleIdx];
+        const lastBlock = blocks[lastVisibleIdx];
+
+        if (!firstBlock || !lastBlock) return;
+
+        const firstTop = firstBlock.offsetTop;
+        const lastBottom = lastBlock.offsetTop + lastBlock.offsetHeight;
+
+        viewportIndicator.style.display = 'block';
+        viewportIndicator.style.top = `${firstTop}px`;
+        viewportIndicator.style.height = `${Math.max(30, lastBottom - firstTop)}px`;
     }
 
     function showTooltip(text, clientY) {
@@ -527,14 +581,68 @@
         setTimeout(init, 500);
     }
 
-    // SPA navigation support
+    // SPA navigation support - improved detection
     let lastUrl = location.href;
+
+    function handleNavigation() {
+        console.log('[Gemini Navigator] Navigation detected, reinitializing...');
+        isInitialized = false;
+        cachedMessages = [];
+
+        // Clear existing minimap content
+        if (minimapContent) {
+            const blocks = minimapContent.querySelectorAll('.minimap-block');
+            blocks.forEach(block => block.remove());
+        }
+
+        // Reinitialize after a delay to allow page content to load
+        setTimeout(() => {
+            init();
+        }, 800);
+    }
+
+    // Method 1: MutationObserver for URL changes
     new MutationObserver(() => {
         if (location.href !== lastUrl) {
             lastUrl = location.href;
-            isInitialized = false;
-            setTimeout(init, 1000);
+            handleNavigation();
         }
     }).observe(document, { subtree: true, childList: true });
+
+    // Method 2: popstate event for back/forward navigation
+    window.addEventListener('popstate', () => {
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            handleNavigation();
+        }
+    });
+
+    // Method 3: Intercept History API
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+
+    history.pushState = function (...args) {
+        originalPushState.apply(this, args);
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            handleNavigation();
+        }
+    };
+
+    history.replaceState = function (...args) {
+        originalReplaceState.apply(this, args);
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            handleNavigation();
+        }
+    };
+
+    // Method 4: Periodic check for URL changes (fallback)
+    setInterval(() => {
+        if (location.href !== lastUrl) {
+            lastUrl = location.href;
+            handleNavigation();
+        }
+    }, 2000);
 
 })();
