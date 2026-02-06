@@ -7,6 +7,8 @@
     'use strict';
 
     const DEFAULT_SETTINGS = {
+        minimapMode: 'block',
+        magnificationScale: 1.6,
         width: 70,
         darkMode: true,
         userColor: '#8ab4f8',
@@ -50,6 +52,9 @@
     }
 
     function updateUI() {
+        document.getElementById('minimap-mode').value = settings.minimapMode || 'block';
+        document.getElementById('magnification').value = settings.magnificationScale || 1.6;
+        document.getElementById('magnification-value').textContent = (settings.magnificationScale || 1.6) + 'x';
         document.getElementById('darkmode').checked = settings.darkMode;
         document.getElementById('width').value = settings.width;
         document.getElementById('width-value').textContent = settings.width + 'px';
@@ -64,9 +69,30 @@
 
         document.body.classList.toggle('dark', settings.darkMode);
         document.body.classList.toggle('light', !settings.darkMode);
+
+        // Show/hide scale setting based on mode
+        const scaleGroup = document.getElementById('scale-group');
+        if (scaleGroup) {
+            scaleGroup.style.display = settings.minimapMode === 'scaled' ? 'block' : 'none';
+        }
     }
 
     function setupEventListeners() {
+        document.getElementById('minimap-mode').addEventListener('change', async (e) => {
+            settings.minimapMode = e.target.value;
+            // Show/hide scale setting
+            const scaleGroup = document.getElementById('scale-group');
+            if (scaleGroup) {
+                scaleGroup.style.display = settings.minimapMode === 'scaled' ? 'block' : 'none';
+            }
+            await saveSettings(settings);
+        });
+
+        document.getElementById('magnification').addEventListener('input', (e) => {
+            settings.magnificationScale = parseFloat(e.target.value);
+            document.getElementById('magnification-value').textContent = settings.magnificationScale + 'x';
+        });
+
         document.getElementById('darkmode').addEventListener('change', async (e) => {
             settings.darkMode = e.target.checked;
             document.body.classList.toggle('dark', settings.darkMode);
@@ -110,6 +136,15 @@
         document.getElementById('geminigif').addEventListener('change', async (e) => {
             settings.geminiGif = e.target.value.trim();
             await saveSettings(settings);
+        });
+
+        document.getElementById('save-btn').addEventListener('click', async () => {
+            await saveSettings(settings);
+            const btn = document.getElementById('save-btn');
+            btn.textContent = '✅ 保存しました！';
+            setTimeout(() => {
+                btn.textContent = '💾 設定を保存';
+            }, 1500);
         });
 
         document.getElementById('reset-btn').addEventListener('click', async () => {

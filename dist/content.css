@@ -9,7 +9,7 @@
     height: calc(100vh - 160px);
     border-radius: 10px;
     z-index: 9999;
-    overflow: hidden;
+    overflow: visible;
     display: flex;
     flex-direction: column;
     opacity: var(--minimap-opacity, 0.6);
@@ -33,7 +33,7 @@
 /* コンテンツエリア */
 #gemini-minimap-content {
     flex: 1;
-    overflow-y: auto;
+    overflow: visible;
     padding: 8px 6px;
     position: relative;
 }
@@ -132,4 +132,39 @@
     background: rgba(255, 255, 255, var(--tooltip-opacity, 0.95));
     color: rgba(32, 33, 36, 0.9);
     border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* 縮小モード（VSCode風） */
+.minimap-scaled-content {
+    overflow: hidden;
+}
+
+.minimap-scaled-block {
+    font-family: 'Google Sans', sans-serif;
+    word-break: break-all;
+    overflow: visible;
+    text-overflow: ellipsis;
+    color: rgba(0, 0, 0, 0.7);
+    position: absolute;
+    transform-origin: right center;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+.minimap-scaled-block.user {
+    margin-left: auto;
+    text-align: right;
+}
+
+.minimap-scaled-block.gemini {
+    margin-right: auto;
+}
+
+.minimap-scaled-block:hover {
+    filter: brightness(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.minimap-scaled-block img {
+    pointer-events: none;
 }

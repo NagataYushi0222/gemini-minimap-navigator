@@ -13,6 +13,19 @@
     <h1>🗺️ Minimap設定</h1>
 
     <div class="setting-group">
+      <label>表示モード</label>
+      <select id="minimap-mode">
+        <option value="block">ブロック（GIF対応）</option>
+        <option value="scaled">縮小表示（VSCode風）</option>
+      </select>
+    </div>
+
+    <div class="setting-group" id="scale-group">
+      <label>拡大倍率: <span id="magnification-value">1.6x</span></label>
+      <input type="range" id="magnification" min="1.0" max="3.0" step="0.1" value="1.6">
+    </div>
+
+    <div class="setting-group">
       <label class="checkbox-label">
         <input type="checkbox" id="darkmode">
         <span>ダークモード</span>
@@ -54,6 +67,7 @@
       <input type="text" id="geminigif" placeholder="https://example.com/ai.gif">
     </div>
 
+    <button id="save-btn">💾 設定を保存</button>
     <button id="reset-btn">デフォルトに戻す</button>
   </div>
   <script src="popup.js"></script>

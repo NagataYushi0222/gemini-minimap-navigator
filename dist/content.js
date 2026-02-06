@@ -8,6 +8,8 @@
 
     // === Types & Defaults ===
     const DEFAULT_SETTINGS = {
+        minimapMode: 'block',
+        magnificationScale: 1.6,
         width: 70,
         darkMode: true,
         userColor: '#8ab4f8',
@@ -388,6 +390,13 @@
     function updateMinimap() {
         if (!minimapContent) return;
 
+        // Mode switch: block mode or scaled mode
+        if (settings.minimapMode === 'scaled') {
+            updateMinimapScaled();
+            return;
+        }
+
+        // Block mode (original)
         const messages = parseMessages();
 
         // Skip redraw if message count is same (prevents flicker)
@@ -400,7 +409,7 @@
         cachedMessages = messages;
 
         // Remove old blocks (keep viewport indicator)
-        const blocksToRemove = minimapContent.querySelectorAll('.minimap-block');
+        const blocksToRemove = minimapContent.querySelectorAll('.minimap-block, .minimap-scaled-content');
         blocksToRemove.forEach(block => block.remove());
 
         if (messages.length === 0) return;
@@ -470,8 +479,276 @@
         updateViewport();
     }
 
+    function updateMinimapScaled() {
+        if (!minimapContent) return;
+
+        // Remove old content
+        const oldContent = minimapContent.querySelectorAll('.minimap-block, .minimap-scaled-content');
+        oldContent.forEach(el => el.remove());
+
+        // Find main content area
+        const mainContent = document.querySelector('main') || document.querySelector('[role="main"]');
+        if (!mainContent) return;
+
+        const messages = parseMessages();
+        cachedMessages = messages;
+
+        if (messages.length === 0) return;
+
+        // Create container for scaled blocks (allows overflow)
+        const scaledContainer = document.createElement('div');
+        scaledContainer.className = 'minimap-scaled-content';
+        scaledContainer.style.cssText = `
+            position: relative;
+            width: 100%;
+            overflow: visible;
+        `;
+
+        // Stack blocks sequentially with gap
+        let currentY = 0;
+        const blockGap = 20;
+
+        // Create blocks positioned sequentially
+        messages.forEach((msg, index) => {
+            if (!msg.element) return;
+
+            const clone = document.createElement('div');
+            clone.className = `minimap-scaled-block ${msg.type}`;
+
+            // Calculate height based on text length
+            const textLength = msg.text.length;
+            const baseHeight = Math.max(18, Math.min(45, 18 + Math.floor(textLength / 40) * 8));
+
+            // Check for images
+            const images = msg.element.querySelectorAll('img');
+            const hasImages = images.length > 0;
+            const finalHeight = hasImages ? baseHeight + 22 : baseHeight;
+
+            clone.style.cssText = `
+                position: absolute;
+                top: ${currentY}px;
+                right: 0;
+                width: ${settings.width - 16}px;
+                min-height: ${finalHeight}px;
+                padding: 4px 6px;
+                border-radius: 4px;
+                font-size: 8px;
+                line-height: 1.3;
+                background: ${msg.type === 'user' ? settings.userColor : settings.geminiColor};
+                color: rgba(0, 0, 0, 0.8);
+                cursor: pointer;
+                pointer-events: auto;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                transform-origin: right center;
+            `;
+
+            // Add images if present
+            if (hasImages) {
+                const imgContainer = document.createElement('div');
+                imgContainer.style.cssText = 'display: flex; gap: 2px; margin-bottom: 3px; flex-wrap: wrap;';
+
+                images.forEach((img, i) => {
+                    if (i < 2) {
+                        const imgClone = document.createElement('img');
+                        imgClone.src = img.src;
+                        imgClone.style.cssText = 'height: 20px; width: auto; max-width: 40px; object-fit: cover; border-radius: 2px;';
+                        imgContainer.appendChild(imgClone);
+                    }
+                });
+
+                clone.appendChild(imgContainer);
+            }
+
+            // Add text
+            const textSpan = document.createElement('span');
+            textSpan.textContent = msg.text.substring(0, 80);
+            textSpan.style.cssText = 'display: block; word-break: break-all;';
+            clone.appendChild(textSpan);
+
+            clone.setAttribute('data-index', index.toString());
+            clone.setAttribute('data-base-y', currentY.toString());
+            clone.setAttribute('data-base-height', finalHeight.toString());
+
+            scaledContainer.appendChild(clone);
+
+            // Update Y position for next block
+            currentY += finalHeight + blockGap;
+        });
+
+        minimapContent.appendChild(scaledContainer);
+
+        // Setup click handlers and Dock magnification effect
+        const blocks = scaledContainer.querySelectorAll('.minimap-scaled-block');
+
+        blocks.forEach(block => {
+            block.addEventListener('click', (e) => {
+                const idx = parseInt(block.getAttribute('data-index') || '-1', 10);
+                if (idx >= 0 && cachedMessages[idx] && cachedMessages[idx].element) {
+                    cachedMessages[idx].element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Dock magnification effect with Gaussian curve
+        const DOCK_CONFIG = {
+            maxScale: settings.magnificationScale || 1.6,
+            minScale: 1.0,
+            sigma: 80
+        };
+
+        // Gaussian function: e^(-d²/2σ²)
+        function gaussian(distance, sigma) {
+            return Math.exp(-(distance * distance) / (2 * sigma * sigma));
+        }
+
+        // Store original positions (calculated once)
+        const originalPositions = [];
+        blocks.forEach((block, i) => {
+            const baseY = parseFloat(block.getAttribute('data-base-y') || '0');
+            const baseHeight = parseFloat(block.getAttribute('data-base-height') || '20');
+            originalPositions.push({
+                top: baseY,
+                height: baseHeight,
+                centerY: baseY + baseHeight / 2
+            });
+        });
+
+        function applyDockEffect(mouseY) {
+            // Find the block closest to cursor
+            let centerIndex = 0;
+            let minDistance = Infinity;
+            for (let i = 0; i < originalPositions.length; i++) {
+                const dist = Math.abs(mouseY - originalPositions[i].centerY);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    centerIndex = i;
+                }
+            }
+
+            // Calculate scales using Gaussian, limit to ±3 blocks
+            const affectRange = 3;
+            const gap = 10; // Consistent gap between blocks
+            const scales = [];
+
+            for (let i = 0; i < blocks.length; i++) {
+                const blockDistance = Math.abs(i - centerIndex);
+
+                if (blockDistance <= affectRange) {
+                    const orig = originalPositions[i];
+                    const pixelDistance = Math.abs(mouseY - orig.centerY);
+                    const gaussianFactor = gaussian(pixelDistance, DOCK_CONFIG.sigma);
+                    const scale = DOCK_CONFIG.minScale + (DOCK_CONFIG.maxScale - DOCK_CONFIG.minScale) * gaussianFactor;
+                    scales.push(Math.max(1.0, scale));
+                } else {
+                    scales.push(1.0);
+                }
+            }
+
+            // Calculate new positions with consistent gaps
+            // Position each block based on accumulated heights + gaps
+            const newTops = [];
+            let currentTop = 0;
+
+            for (let i = 0; i < blocks.length; i++) {
+                newTops.push(currentTop);
+                const scaledHeight = originalPositions[i].height * scales[i];
+                currentTop += scaledHeight + gap;
+            }
+
+            // Apply styles
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                block.style.top = `${newTops[i]}px`;
+                block.style.transform = `scale(${scales[i]})`;
+                block.style.zIndex = (Math.abs(i - centerIndex) <= affectRange)
+                    ? (100 + (affectRange - Math.abs(i - centerIndex)) * 10).toString()
+                    : '1';
+            }
+        }
+
+        function resetDockEffect() {
+            for (let i = 0; i < blocks.length; i++) {
+                const block = blocks[i];
+                const orig = originalPositions[i];
+                block.style.top = `${orig.top}px`;
+                block.style.transform = 'scale(1)';
+                block.style.zIndex = '1';
+            }
+        }
+
+        // Apply effect on mouseenter and mousemove
+        scaledContainer.addEventListener('mouseenter', (e) => {
+            const rect = scaledContainer.getBoundingClientRect();
+            const mouseY = e.clientY - rect.top;
+            applyDockEffect(mouseY);
+        });
+
+        scaledContainer.addEventListener('mousemove', (e) => {
+            const rect = scaledContainer.getBoundingClientRect();
+            const mouseY = e.clientY - rect.top;
+            applyDockEffect(mouseY);
+        });
+
+        scaledContainer.addEventListener('mouseleave', () => {
+            resetDockEffect();
+        });
+
+        updateViewportScaled();
+    }
+
+    function updateViewportScaled() {
+        if (!viewportIndicator || !minimapContent) return;
+
+        const scaledContainer = minimapContent.querySelector('.minimap-scaled-content');
+        if (!scaledContainer) {
+            updateViewport();
+            return;
+        }
+
+        const blocks = scaledContainer.querySelectorAll('.minimap-scaled-block');
+        if (blocks.length === 0) return;
+
+        // Find first and last visible message
+        let firstVisibleIdx = -1;
+        let lastVisibleIdx = -1;
+
+        cachedMessages.forEach((msg, idx) => {
+            if (msg.element) {
+                const rect = msg.element.getBoundingClientRect();
+                const isVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+                if (isVisible) {
+                    if (firstVisibleIdx === -1) firstVisibleIdx = idx;
+                    lastVisibleIdx = idx;
+                }
+            }
+        });
+
+        if (firstVisibleIdx === -1) {
+            viewportIndicator.style.display = 'none';
+            return;
+        }
+
+        const firstBlock = blocks[firstVisibleIdx];
+        const lastBlock = blocks[lastVisibleIdx];
+
+        if (!firstBlock || !lastBlock) return;
+
+        const firstTop = firstBlock.offsetTop;
+        const lastBottom = lastBlock.offsetTop + lastBlock.offsetHeight;
+
+        viewportIndicator.style.display = 'block';
+        viewportIndicator.style.top = `${firstTop}px`;
+        viewportIndicator.style.height = `${Math.max(30, lastBottom - firstTop)}px`;
+    }
+
     function updateViewport() {
         if (!viewportIndicator || !minimapContent) return;
+
+        // If scaled mode, use scaled viewport update
+        if (settings.minimapMode === 'scaled') {
+            updateViewportScaled();
+            return;
+        }
 
         const blocks = minimapContent.querySelectorAll('.minimap-block');
         if (blocks.length === 0) return;
