@@ -1,0 +1,167 @@
+/* Gemini Minimap Navigator - Styles */
+
+/* ミニマップコンテナ */
+.gemini-minimap-container {
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100vh;
+    width: 450px;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* 視覚的な背景（狭い帯） */
+.gemini-minimap-bg {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 120px;
+    background: rgba(0, 0, 0, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+/* x=0 基準線 */
+.gemini-minimap-baseline {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #1e293b, #334155, #1e293b);
+    z-index: 10;
+}
+
+/* ブロックラッパー */
+.gemini-minimap-blocks {
+    position: absolute;
+    right: 10px;
+    width: 430px;
+    top: 0;
+    bottom: 0;
+    padding: 15vh 0;
+    overflow-y: auto;
+    overflow-x: visible;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(100, 116, 139, 0.5) transparent;
+    pointer-events: auto;
+    -webkit-mask-image: linear-gradient(to bottom,
+            transparent 0%,
+            rgba(0, 0, 0, 0.3) 5%,
+            rgba(0, 0, 0, 0.7) 10%,
+            black 15%,
+            black 85%,
+            rgba(0, 0, 0, 0.7) 90%,
+            rgba(0, 0, 0, 0.3) 95%,
+            transparent 100%);
+    mask-image: linear-gradient(to bottom,
+            transparent 0%,
+            rgba(0, 0, 0, 0.3) 5%,
+            rgba(0, 0, 0, 0.7) 10%,
+            black 15%,
+            black 85%,
+            rgba(0, 0, 0, 0.7) 90%,
+            rgba(0, 0, 0, 0.3) 95%,
+            transparent 100%);
+}
+
+.gemini-minimap-blocks::-webkit-scrollbar {
+    width: 6px;
+}
+
+.gemini-minimap-blocks::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.gemini-minimap-blocks::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.5);
+    border-radius: 3px;
+}
+
+/* ミニマップブロック */
+.gemini-minimap-block {
+    position: relative;
+    margin: 4px 0;
+    border-radius: 6px;
+    transition: all 0.12s ease-out;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    transform-origin: right center;
+}
+
+/* ユーザーメッセージブロック */
+.gemini-minimap-block.user {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* AIメッセージブロック */
+.gemini-minimap-block.model {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+}
+
+/* コンテンツラッパー */
+.gemini-minimap-content {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    transition: all 0.12s ease-out;
+    align-items: flex-start;
+}
+
+/* テキスト表示 */
+.gemini-minimap-text {
+    font-size: 11px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.95);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: font-size 0.12s ease-out;
+    flex: 1;
+    min-height: 0;
+}
+
+/* 画像コンテナ */
+.gemini-minimap-images {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+/* 画像サムネイル */
+.gemini-minimap-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(0, 0, 0, 0.4);
+    transition: all 0.12s ease-out;
+}
+
+/* ホバー時のハイライト */
+.gemini-minimap-block:hover {
+    filter: brightness(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}

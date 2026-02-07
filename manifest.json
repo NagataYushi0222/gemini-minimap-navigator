@@ -1,0 +1,23 @@
+{
+    "manifest_version": 3,
+    "name": "Gemini Minimap Navigator",
+    "version": "1.0.0",
+    "description": "Geminiのチャット履歴をミニマップで視覚化し、マグニフィケーションエフェクトでナビゲート",
+    "permissions": [
+        "activeTab"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "https://gemini.google.com/*"
+            ],
+            "css": [
+                "styles.css"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
