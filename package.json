@@ -1,0 +1,15 @@
+{
+    "name": "gemini-minimap-navigator",
+    "version": "1.0.0",
+    "description": "Gemini Minimap Navigator Extension",
+    "scripts": {
+        "build": "tsc && npm run copy-assets",
+        "copy-assets": "cp src/popup.html dist/ && cp src/popup.css dist/ && cp src/content.css dist/ && cp manifest.json dist/ && cp -r icons dist/",
+        "watch": "tsc --watch",
+        "dev": "npm run build && npm run watch"
+    },
+    "devDependencies": {
+        "typescript": "^5.3.3",
+        "@types/chrome": "^0.0.260"
+    }
+}

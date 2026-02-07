@@ -1,0 +1,109 @@
+/* Gemini Navigator - Content Script Styles */
+
+/* ミニマップコンテナ */
+#gemini-minimap {
+    position: fixed;
+    top: 80px;
+    right: 12px;
+    width: 70px;
+    height: calc(100vh - 160px);
+    border-radius: 10px;
+    z-index: 9999;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: var(--minimap-opacity, 0.6);
+    transition: opacity 0.25s ease, width 0.2s ease, background 0.2s ease;
+}
+
+#gemini-minimap:hover {
+    opacity: 1 !important;
+}
+
+#gemini-minimap.dark {
+    background: rgba(32, 33, 36, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#gemini-minimap.light {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* コンテンツエリア */
+#gemini-minimap-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 6px;
+    position: relative;
+}
+
+#gemini-minimap-content::-webkit-scrollbar {
+    display: none;
+}
+
+/* メッセージブロック */
+.minimap-block {
+    border-radius: 4px;
+    cursor: pointer;
+    transition: filter 0.15s ease, box-shadow 0.15s ease;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+.minimap-block:hover {
+    filter: brightness(1.2);
+}
+
+.minimap-block.has-gif {
+    background-color: transparent !important;
+}
+
+.minimap-block.user {
+    opacity: 0.8;
+}
+
+.minimap-block.gemini {
+    opacity: 0.7;
+}
+
+/* ビューポートハイライト */
+#gemini-minimap-viewport {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    background: rgba(138, 180, 248, 0.1);
+    border: 1px solid rgba(138, 180, 248, 0.5);
+    border-radius: 4px;
+    pointer-events: none;
+    transition: top 0.1s ease-out, height 0.1s ease-out;
+}
+
+/* ツールチップ */
+.minimap-tooltip {
+    position: fixed;
+    right: 90px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    max-width: 300px;
+    line-height: 1.5;
+    z-index: 10001;
+    pointer-events: none;
+    font-family: 'Google Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    word-break: break-word;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.minimap-tooltip.dark {
+    background: rgba(41, 42, 45, 0.95);
+    color: rgba(232, 234, 237, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.minimap-tooltip.light {
+    background: rgba(255, 255, 255, 0.95);
+    color: rgba(32, 33, 36, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
